@@ -1,0 +1,88 @@
+object Form1: TForm1
+  Left = 1138
+  Height = 514
+  Top = 128
+  Width = 652
+  Caption = 'Form1'
+  ClientHeight = 514
+  ClientWidth = 652
+  LCLVersion = '1.4.0.4'
+  object Memo1: TMemo
+    Left = 16
+    Height = 482
+    Top = 16
+    Width = 328
+    Lines.Strings = (
+      'Memo1'
+    )
+    TabOrder = 0
+  end
+  object RadioButton1: TRadioButton
+    Left = 416
+    Height = 24
+    Top = 136
+    Width = 64
+    Caption = 'nakup'
+    TabOrder = 1
+  end
+  object RadioButton2: TRadioButton
+    Left = 416
+    Height = 24
+    Top = 168
+    Width = 67
+    Caption = 'predaj'
+    TabOrder = 2
+  end
+  object Button1: TButton
+    Left = 440
+    Height = 41
+    Top = 288
+    Width = 107
+    Caption = 'Ulož zmenu'
+    TabOrder = 3
+  end
+  object Label1: TLabel
+    Left = 432
+    Height = 20
+    Top = 16
+    Width = 91
+    Caption = 'ZMENA CENY'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 360
+    Height = 20
+    Top = 72
+    Width = 45
+    Caption = 'tovar : '
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 360
+    Height = 20
+    Top = 240
+    Width = 38
+    Caption = 'cena :'
+    ParentColor = False
+  end
+  object Edit1: TEdit
+    Left = 416
+    Height = 28
+    Top = 64
+    Width = 224
+    TabOrder = 4
+    Text = 'Edit1'
+  end
+  object Edit2: TEdit
+    Left = 416
+    Height = 28
+    Top = 232
+    Width = 224
+    TabOrder = 5
+    Text = 'Edit2'
+  end
+  object Timer1: TTimer
+    left = 480
+    top = 448
+  end
+end
