@@ -1,0 +1,16 @@
+15
+100;jablko
+101;banan
+102;pomaranc
+200;rajcina
+201;paprika
+202;kalerab
+203;zazvor
+300;rozok
+301;pletenka
+302;vianocka
+303;chlieb
+304;zemla
+305;makovnik velky
+400;pivo
+401;tvaroh
