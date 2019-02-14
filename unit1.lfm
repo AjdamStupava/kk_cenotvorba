@@ -1,17 +1,17 @@
 object Form1: TForm1
-  Left = 1134
-  Height = 747
+  Left = 1132
+  Height = 681
   Top = 132
   Width = 759
   Caption = 'Form1'
-  ClientHeight = 747
+  ClientHeight = 681
   ClientWidth = 759
   OnCreate = FormCreate
   LCLVersion = '1.4.0.4'
   object Button1: TButton
     Left = 560
     Height = 41
-    Top = 384
+    Top = 360
     Width = 107
     Caption = 'Ulož zmenu'
     OnClick = Button1Click
@@ -26,7 +26,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label2: TLabel
-    Left = 456
+    Left = 448
     Height = 20
     Top = 216
     Width = 45
@@ -41,20 +41,12 @@ object Form1: TForm1
     Caption = 'nákupná cena'
     ParentColor = False
   end
-  object Edit1: TEdit
-    Left = 504
-    Height = 28
-    Top = 208
-    Width = 224
-    OnEditingDone = Edit1EditingDone
-    TabOrder = 1
-  end
   object Edit2: TEdit
     Left = 504
     Height = 28
     Top = 304
     Width = 104
-    TabOrder = 2
+    TabOrder = 1
   end
   object ListBox1: TListBox
     Left = 104
@@ -63,14 +55,14 @@ object Form1: TForm1
     Width = 136
     ItemHeight = 0
     OnSelectionChange = ListBox1SelectionChange
-    TabOrder = 3
+    TabOrder = 2
   end
   object Edit3: TEdit
     Left = 624
     Height = 28
     Top = 304
     Width = 104
-    TabOrder = 4
+    TabOrder = 3
   end
   object Label4: TLabel
     Left = 624
@@ -82,13 +74,13 @@ object Form1: TForm1
   end
   object Memo1: TMemo
     Left = 16
-    Height = 216
+    Height = 144
     Top = 512
     Width = 400
     Lines.Strings = (
       'Memo1'
     )
-    TabOrder = 5
+    TabOrder = 4
   end
   object ListBox2: TListBox
     Left = 240
@@ -97,7 +89,7 @@ object Form1: TForm1
     Width = 96
     ItemHeight = 0
     OnSelectionChange = ListBox2SelectionChange
-    TabOrder = 6
+    TabOrder = 5
   end
   object ListBox3: TListBox
     Left = 336
@@ -106,7 +98,7 @@ object Form1: TForm1
     Width = 96
     ItemHeight = 0
     OnSelectionChange = ListBox3SelectionChange
-    TabOrder = 7
+    TabOrder = 6
   end
   object Image1: TImage
     Left = 304
@@ -145,10 +137,10 @@ object Form1: TForm1
     Width = 96
     ItemHeight = 0
     OnSelectionChange = ListBox4SelectionChange
-    TabOrder = 8
+    TabOrder = 7
   end
   object Label8: TLabel
-    Left = 24
+    Left = 16
     Height = 20
     Top = 91
     Width = 71
@@ -156,19 +148,37 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label9: TLabel
-    Left = 464
+    Left = 461
     Height = 20
     Top = 173
     Width = 32
     Caption = 'kód :'
     ParentColor = False
   end
-  object Edit4: TEdit
+  object EditButton1: TEditButton
     Left = 504
     Height = 28
     Top = 165
     Width = 224
-    OnEditingDone = Edit4EditingDone
+    ButtonCaption = 'hľadaj'
+    ButtonWidth = 65
+    MaxLength = 0
+    NumGlyphs = 1
+    OnButtonClick = EditButton1ButtonClick
+    PasswordChar = #0
+    TabOrder = 8
+  end
+  object EditButton2: TEditButton
+    Left = 504
+    Height = 28
+    Top = 208
+    Width = 226
+    ButtonCaption = 'hľadaj'
+    ButtonWidth = 65
+    MaxLength = 0
+    NumGlyphs = 1
+    OnButtonClick = EditButton2ButtonClick
+    PasswordChar = #0
     TabOrder = 9
   end
   object Timer1: TTimer
