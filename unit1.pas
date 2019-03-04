@@ -42,6 +42,8 @@ end;
     Panel1: TPanel;
     Panel2: TPanel;
     Timer1: TTimer;
+    Timer2: TTimer;
+    Timer3: TTimer;
     procedure Edit5EditingDone(Sender: TObject);
     procedure Edit6EditingDone(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -53,6 +55,8 @@ end;
     procedure Panel1Click(Sender: TObject);
     procedure Panel2Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure Timer2Timer(Sender: TObject);
+    procedure Timer3Timer(Sender: TObject);
     procedure twodecplaces(i:Integer);
     procedure hladaniepodlakodu;
     procedure hladaniepodlanazvu;
@@ -60,6 +64,8 @@ end;
     procedure selekciaitemu2;
     procedure zapisarefresh;
     procedure nacitanieavypis;
+    procedure lockzapis;
+    procedure locknacitanie;
   private
     { private declarations }
   public
@@ -75,7 +81,8 @@ var
   Slist,Slist2:TStringList;
   aktual,pocet,pocet2,pocet3,aktualverzia,verzia:Integer;
   subor,subor2,subor3:TextFile;
-  pomoc,stare,nove:String;
+  pomoc,stare,nove,path:String;
+  ceki:Boolean;   //ak je true, tak robi zapis, ak je false, robi nacitanie
   Form1: TForm1;
 
 implementation
@@ -89,7 +96,8 @@ begin
   //image1.Canvas.Font.Color:=clWhite;
   image1.Canvas.Font.Height:=40;
   image1.Canvas.TextOut(0,0,'CENOTVORBA');
-
+  path:='';
+  //path:=;
 
   Slist2:=TStringList.Create;       // Slist2 je stringlist s nazvami a kodmi
   Slist:=TStringList.Create;       // Slist je stringlist s cenami a kodmi
@@ -236,16 +244,50 @@ begin
   IF aktualverzia <> verzia THEN
    begin
     aktualverzia:=verzia;
-
     IF FileExists('CENNIK_LOCK.txt') THEN
      begin
-      // este neviem co, asi sa spusti nejaky druhy timer, ktory bude cakat, kym sa neodstrani lock
+      ceki:=false;
+      Timer2.enabled:=true;
      end
     ELSE
-     begin
       nacitanieavypis;
-     end;
+   end;
 
+end;
+
+procedure TForm1.Timer2Timer(Sender: TObject);
+begin
+
+  IF FileExists('CENNIK_LOCK.txt') THEN
+
+  ELSE
+   begin
+     IF (ceki=true) THEN
+       lockzapis
+     ELSE
+      begin
+       locknacitanie;
+      end;
+     Timer2.enabled:=false;
+   end;
+
+end;
+
+procedure TForm1.Timer3Timer(Sender: TObject);
+begin
+
+  IF FileExists('TOVAR_LOCK.txt') THEN
+   begin
+
+   end
+  ELSE
+   begin
+    AssignFile(subor2,'TOVAR_LOCK.txt');
+    Rewrite(subor2);
+    CloseFile(subor2);
+    Slist2.LoadFromFile('TOVAR.txt');
+    DeleteFile('TOVAR_LOCK.txt');
+    Timer3.enabled:=false;
    end;
 
 end;
@@ -405,31 +447,13 @@ begin
   Slist.text:=StringReplace(Slist.text,stare,nove,[rfIgnoreCase]);
   inc(aktualverzia);
 
-  IF (FileExists('CENNIK_LOCK.txt')) or (FileExists('CENNIK_VERZIA_LOCK.txt')) THEN
+  IF FileExists('CENNIK_LOCK.txt')  THEN
    begin
-    // este neviem co, asi sa spusti nejaky druhy timer, ktory bude cakat, kym sa neodstrani lock
+    ceki:=true;
+    Timer2.enabled:=true;
    end
   ELSE
-   begin
-    AssignFile(subor2,'CENNIK_LOCK.txt');  //vytvorim lock na cennik
-    Rewrite(subor2);
-    CloseFile(subor2);
-
-    AssignFile(subor3,'CENNIK_VERZIA_LOCK.txt');   //vytvorim lock na verziu
-    Rewrite(subor3);
-    CloseFile(subor3);
-
-    Slist.SaveToFile('CENNIK.txt');        //zapisem do cennika
-
-    AssignFile(subor,'CENNIK_VERZIA.txt');    //zapisem do verzie novu verziu
-    Rewrite(subor);
-    Write(subor,aktualverzia);
-    CloseFile(subor);
-
-    DeleteFile('CENNIK_VERZIA_LOCK.txt');       //odstranim oba locky
-    DeleteFile('CENNIK_LOCK.txt');
-    //Slist.Free;
-   end;
+    lockzapis;
 
 end;
 
@@ -654,21 +678,14 @@ begin
 
   IF FileExists('CENNIK_LOCK.txt') THEN
    begin
-    // este neviem co, asi sa spusti nejaky druhy timer, ktory bude cakat, kym sa neodstrani lock
+    ceki:=false;
+    Timer2.enabled:=true;
    end
   ELSE
-   begin
-    AssignFile(subor2,'CENNIK_LOCK.txt');
-    Rewrite(subor2);
-    CloseFile(subor2);
-    Slist.LoadFromFile('CENNIK.txt');
-    DeleteFile('CENNIK_LOCK.txt');
-   end;
+    locknacitanie;
 
   IF FileExists('TOVAR_LOCK.txt') THEN
-   begin
-    // este neviem co, asi sa spusti nejaky druhy timer, ktory bude cakat, kym sa neodstrani lock
-   end
+    Timer3.enabled:=true
   ELSE
    begin
     AssignFile(subor2,'TOVAR_LOCK.txt');
@@ -741,6 +758,35 @@ begin
     twodecplaces(i);                       // vypis cien do listboxov
     ListBox4.Items.Add(cennik[i].kod);
    end;
+
+end;
+
+procedure TForm1.lockzapis;
+begin
+
+  AssignFile(subor2,'CENNIK_LOCK.txt');  //vytvorim lock na cennik
+  Rewrite(subor2);
+  CloseFile(subor2);
+
+  AssignFile(subor,'CENNIK_VERZIA.txt');    //zapisem do verzie novu verziu
+  Rewrite(subor);
+  Write(subor,aktualverzia);
+  Slist.SaveToFile('CENNIK.txt');        //zapisem do cennika
+  CloseFile(subor);
+
+  DeleteFile('CENNIK_LOCK.txt');   //odstranim lock
+  //Slist.Free;
+
+end;
+
+procedure TForm1.locknacitanie;
+begin
+
+  AssignFile(subor2,'CENNIK_LOCK.txt');
+  Rewrite(subor2);
+  CloseFile(subor2);
+  Slist.LoadFromFile('CENNIK.txt');
+  DeleteFile('CENNIK_LOCK.txt');
 
 end;
 
