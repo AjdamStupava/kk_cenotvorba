@@ -42,8 +42,6 @@ end;
     Panel1: TPanel;
     Panel2: TPanel;
     Timer1: TTimer;
-    Timer2: TTimer;
-    Timer3: TTimer;
     procedure Edit5EditingDone(Sender: TObject);
     procedure Edit6EditingDone(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -55,8 +53,6 @@ end;
     procedure Panel1Click(Sender: TObject);
     procedure Panel2Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
-    procedure Timer2Timer(Sender: TObject);
-    procedure Timer3Timer(Sender: TObject);
     procedure twodecplaces(i:Integer);
     procedure hladaniepodlakodu;
     procedure hladaniepodlanazvu;
@@ -82,8 +78,8 @@ var
   aktual,pocet,pocet2,pocet3,aktualverzia,verzia:Integer;
   subor,subor2,subor3:TextFile;
   pomoc,stare,nove,path:String;
-  ceki:Boolean;   //ak je true, tak robi zapis, ak je false, robi nacitanie
-  Form1: TForm1;
+  ceki,control:Boolean;   //ceki pozera, ci je nacitanie dokoncene
+  Form1: TForm1;          //control pozera, ci je zapis dokoncene
 
 implementation
 
@@ -93,16 +89,15 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  //image1.Canvas.Font.Color:=clWhite;
-  image1.Canvas.Font.Height:=40;
-  image1.Canvas.TextOut(0,0,'CENOTVORBA');
+
+  image1.Picture.LoadFromFile('KinderKaufland_logo.bmp');
   path:='';
-  //path:=;
+  //path:='Z:\INFProjekt2019\TimB\';
 
   Slist2:=TStringList.Create;       // Slist2 je stringlist s nazvami a kodmi
   Slist:=TStringList.Create;       // Slist je stringlist s cenami a kodmi
 
-  AssignFile(subor,'CENNIK_VERZIA.txt');
+  AssignFile(subor,path+'CENNIK_VERZIA.txt');
   Reset(subor);
   Read(subor,aktualverzia);
   CloseFile(subor);
@@ -236,7 +231,7 @@ end;
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
 
-  AssignFile(subor,'CENNIK_VERZIA.txt');
+  AssignFile(subor,path+'CENNIK_VERZIA.txt');
   Reset(subor);
   Read(subor,verzia);
   CloseFile(subor);
@@ -244,50 +239,10 @@ begin
   IF aktualverzia <> verzia THEN
    begin
     aktualverzia:=verzia;
-    IF FileExists('CENNIK_LOCK.txt') THEN
-     begin
-      ceki:=false;
-      Timer2.enabled:=true;
-     end
+    IF FileExists(path+'CENNIK_LOCK.txt') THEN
+
     ELSE
       nacitanieavypis;
-   end;
-
-end;
-
-procedure TForm1.Timer2Timer(Sender: TObject);
-begin
-
-  IF FileExists('CENNIK_LOCK.txt') THEN
-
-  ELSE
-   begin
-     IF (ceki=true) THEN
-       lockzapis
-     ELSE
-      begin
-       locknacitanie;
-      end;
-     Timer2.enabled:=false;
-   end;
-
-end;
-
-procedure TForm1.Timer3Timer(Sender: TObject);
-begin
-
-  IF FileExists('TOVAR_LOCK.txt') THEN
-   begin
-
-   end
-  ELSE
-   begin
-    AssignFile(subor2,'TOVAR_LOCK.txt');
-    Rewrite(subor2);
-    CloseFile(subor2);
-    Slist2.LoadFromFile('TOVAR.txt');
-    DeleteFile('TOVAR_LOCK.txt');
-    Timer3.enabled:=false;
    end;
 
 end;
@@ -424,36 +379,132 @@ procedure TForm1.zapisarefresh;
 var i:Integer;
 begin
 
-  ListBox1.Items.Clear;
-  ListBox2.Items.Clear;
-  ListBox3.Items.Clear;
-  ListBox4.Items.Clear;
+  control:=false;
 
-  for i:=1 to pocet2 do
+  while not control do
    begin
-    ListBox1.Items.Add(tovarybez[i].nazov);
-    ListBox2.Items.Add('-');
-    ListBox3.Items.Add('-');
-    ListBox4.Items.Add(tovarybez[i].kod);
+    IF FileExists(path+'CENNIK_LOCK.txt')  THEN
+
+    ELSE
+     begin
+      Slist.text:=StringReplace(Slist.text,stare,nove,[rfIgnoreCase]);
+      inc(aktualverzia);
+      lockzapis;
+      ListBox1.Items.Clear;
+      ListBox2.Items.Clear;
+      ListBox3.Items.Clear;
+      ListBox4.Items.Clear;
+
+      for i:=1 to pocet2 do
+       begin
+        ListBox1.Items.Add(tovarybez[i].nazov);
+        ListBox2.Items.Add('-');
+        ListBox3.Items.Add('-');
+        ListBox4.Items.Add(tovarybez[i].kod);
+       end;
+
+      for i:=1 to pocet do
+       begin
+        ListBox1.Items.Add(cennik[i].nazov);
+        twodecplaces(i);
+        ListBox4.Items.Add(cennik[i].kod);
+       end;
+
+      control:=true;
+     end;
+
    end;
 
-  for i:=1 to pocet do
+end;
+
+procedure TForm1.nacitanieavypis;
+var i,poz,j,h:Integer;
+begin
+
+  ceki:=false;
+
+  while not ceki do
    begin
-    ListBox1.Items.Add(cennik[i].nazov);
-    twodecplaces(i);
-    ListBox4.Items.Add(cennik[i].kod);
+
+    IF (not FileExists(path+'CENNIK_LOCK.txt')) and (not FileExists(path+'TOVAR_LOCK.txt')) THEN
+     begin
+      locknacitanie;
+
+      AssignFile(subor2,path+'TOVAR_LOCK.txt');
+      Rewrite(subor2);
+      CloseFile(subor2);
+      Slist2.LoadFromFile(path+'TOVAR.txt');
+      DeleteFile(path+'TOVAR_LOCK.txt');
+
+      pocet3:=StrToInt(Slist2[0]);        // pocet3 je pocet vsetkych tovarov
+
+      for i:=1 to pocet3 do
+       begin
+        pomoc:=Slist2[i];
+        poz:=POS(';',pomoc);
+        tovary[i].kod:=COPY(pomoc,1,poz-1);
+        tovary[i].nazov:=COPY(pomoc,poz+1,length(pomoc));
+       end;
+
+      i:=0;
+      j:=0;
+
+      for h:=1 to pocet3 do
+       begin
+        pomoc:=Slist[h];
+        IF (length(pomoc) = 3) THEN
+         begin
+          inc(j);
+          tovarybez[j].kod:=pomoc;
+         end
+        ELSE
+         begin
+          inc(i);
+          poz:=POS(';',pomoc);
+          cennik[i].kod:=COPY(pomoc,1,poz-1);
+          Delete(pomoc,1,poz);
+          poz:=POS(';',pomoc);
+          cennik[i].nakup:=StrToFloat(COPY(pomoc,1,poz-1)) / 100;
+          cennik[i].predaj:=StrToFloat(COPY(pomoc,poz+1,length(pomoc))) / 100;
+         end;
+       end;
+      pocet2:=j;                       // pocet2 je pocet tovarov bez ceny
+      pocet:=i;                        // pocet je pocet tovarov s cenami
+
+      for i:=1 to pocet do            // priradovanie nazvov k ich cenam a kodom
+        for j:=1 to pocet3 do
+          IF cennik[i].kod = tovary[j].kod THEN
+            cennik[i].nazov:=tovary[j].nazov;
+
+      for i:=1 to pocet2 do
+        for j:=1 to pocet3 do
+          IF tovarybez[i].kod = tovary[j].kod THEN
+            tovarybez[i].nazov:=tovary[j].nazov;
+
+      ListBox1.Items.Clear;
+      ListBox2.Items.Clear;
+      ListBox3.Items.Clear;
+      ListBox4.Items.Clear;
+
+      for i:=1 to pocet2 do        // tovary bez ceny na horne pozicie listboxov
+       begin
+        ListBox1.Items.Add(tovarybez[i].nazov);
+        ListBox2.Items.Add('-');
+        ListBox3.Items.Add('-');
+        ListBox4.Items.Add(tovarybez[i].kod);
+       end;
+
+      for i:=1 to pocet do
+       begin
+        ListBox1.Items.Add(cennik[i].nazov);
+        twodecplaces(i);                       // vypis cien do listboxov
+        ListBox4.Items.Add(cennik[i].kod);
+       end;
+
+      ceki:=true;
+     end;
    end;
 
-  Slist.text:=StringReplace(Slist.text,stare,nove,[rfIgnoreCase]);
-  inc(aktualverzia);
-
-  IF FileExists('CENNIK_LOCK.txt')  THEN
-   begin
-    ceki:=true;
-    Timer2.enabled:=true;
-   end
-  ELSE
-    lockzapis;
 
 end;
 
@@ -672,109 +723,20 @@ begin
 
 end;
 
-procedure TForm1.nacitanieavypis;
-var i,poz,j,h:Integer;
-begin
-
-  IF FileExists('CENNIK_LOCK.txt') THEN
-   begin
-    ceki:=false;
-    Timer2.enabled:=true;
-   end
-  ELSE
-    locknacitanie;
-
-  IF FileExists('TOVAR_LOCK.txt') THEN
-    Timer3.enabled:=true
-  ELSE
-   begin
-    AssignFile(subor2,'TOVAR_LOCK.txt');
-    Rewrite(subor2);
-    CloseFile(subor2);
-    Slist2.LoadFromFile('TOVAR.txt');
-    DeleteFile('TOVAR_LOCK.txt');
-   end;
-
-
-  pocet3:=StrToInt(Slist2[0]);        // pocet3 je pocet vsetkych tovarov
-
-  for i:=1 to pocet3 do
-   begin
-    pomoc:=Slist2[i];
-    poz:=POS(';',pomoc);
-    tovary[i].kod:=COPY(pomoc,1,poz-1);
-    tovary[i].nazov:=COPY(pomoc,poz+1,length(pomoc));
-   end;
-
-
-  i:=0;
-  j:=0;
-
-  for h:=1 to pocet3 do
-   begin
-    pomoc:=Slist[h];
-    IF (length(pomoc) = 3) THEN
-     begin
-      inc(j);
-      tovarybez[j].kod:=pomoc;
-     end
-    ELSE
-     begin
-      inc(i);
-      poz:=POS(';',pomoc);
-      cennik[i].kod:=COPY(pomoc,1,poz-1);
-      Delete(pomoc,1,poz);
-      poz:=POS(';',pomoc);
-      cennik[i].nakup:=StrToFloat(COPY(pomoc,1,poz-1)) / 100;
-      cennik[i].predaj:=StrToFloat(COPY(pomoc,poz+1,length(pomoc))) / 100;
-     end;
-   end;
-  pocet2:=j;                       // pocet2 je pocet tovarov bez ceny
-  pocet:=i;                        // pocet je pocet tovarov s cenami
-
-
-  for i:=1 to pocet do            // priradovanie nazvov k ich cenam a kodom
-    for j:=1 to pocet3 do
-      IF cennik[i].kod = tovary[j].kod THEN
-        cennik[i].nazov:=tovary[j].nazov;
-
-  for i:=1 to pocet2 do
-    for j:=1 to pocet3 do
-      IF tovarybez[i].kod = tovary[j].kod THEN
-        tovarybez[i].nazov:=tovary[j].nazov;
-
-
-  for i:=1 to pocet2 do        // tovary bez ceny na horne pozicie listboxov
-   begin
-    ListBox1.Items.Add(tovarybez[i].nazov);
-    ListBox2.Items.Add('-');
-    ListBox3.Items.Add('-');
-    ListBox4.Items.Add(tovarybez[i].kod);
-   end;
-
-  for i:=1 to pocet do
-   begin
-    ListBox1.Items.Add(cennik[i].nazov);
-    twodecplaces(i);                       // vypis cien do listboxov
-    ListBox4.Items.Add(cennik[i].kod);
-   end;
-
-end;
-
 procedure TForm1.lockzapis;
 begin
 
-  AssignFile(subor2,'CENNIK_LOCK.txt');  //vytvorim lock na cennik
+  AssignFile(subor2,path+'CENNIK_LOCK.txt');  //vytvorim lock na cennik
   Rewrite(subor2);
   CloseFile(subor2);
 
-  AssignFile(subor,'CENNIK_VERZIA.txt');    //zapisem do verzie novu verziu
+  AssignFile(subor,path+'CENNIK_VERZIA.txt');    //zapisem do verzie novu verziu
   Rewrite(subor);
   Write(subor,aktualverzia);
-  Slist.SaveToFile('CENNIK.txt');        //zapisem do cennika
+  Slist.SaveToFile(path+'CENNIK.txt');        //zapisem do cennika
   CloseFile(subor);
 
-  DeleteFile('CENNIK_LOCK.txt');   //odstranim lock
+  DeleteFile(path+'CENNIK_LOCK.txt');   //odstranim lock
   //Slist.Free;
 
 end;
@@ -782,11 +744,11 @@ end;
 procedure TForm1.locknacitanie;
 begin
 
-  AssignFile(subor2,'CENNIK_LOCK.txt');
+  AssignFile(subor2,path+'CENNIK_LOCK.txt');
   Rewrite(subor2);
   CloseFile(subor2);
-  Slist.LoadFromFile('CENNIK.txt');
-  DeleteFile('CENNIK_LOCK.txt');
+  Slist.LoadFromFile(path+'CENNIK.txt');
+  DeleteFile(path+'CENNIK_LOCK.txt');
 
 end;
 
